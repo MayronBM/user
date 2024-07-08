@@ -1,10 +1,9 @@
 package ni.com.user.security.service;
 
 import ni.com.user.security.dto.SignInDto;
-import ni.com.user.security.dto.SignUpDto;
-import ni.com.user.security.dto.UserRequestDto;
+import ni.com.user.security.dto.UserCreateDto;
 import ni.com.user.security.dto.UserResponseDto;
-import ni.com.user.security.mapper.SignUpMapper;
+import ni.com.user.security.mapper.UserCreateMapper;
 import ni.com.user.security.mapper.UserMapper;
 import ni.com.user.security.model.User;
 import ni.com.user.security.support.security.UserDetailsImpl;
@@ -38,7 +37,7 @@ public class AuthServiceTest {
     private UserMapper userMapper;
 
     @Mock
-    private SignUpMapper signUpMapper;
+    private UserCreateMapper userCreateMapper;
 
     @InjectMocks
     private AuthService authService;
@@ -55,11 +54,11 @@ public class AuthServiceTest {
 
         user = User.builder()
                 .id(UUID.fromString("bef39ea1-3e0a-4189-8864-343f32875f62"))
-                .username("prueba")
+                .name("prueba")
                 .email("prueba@prueba.com")
                 .password("Prueba*123")
                 .created(LocalDateTime.now())
-                .modificated(LocalDateTime.now())
+                .modified(LocalDateTime.now())
                 .lastLogin(LocalDateTime.now())
                 .token(token)
                 .enabled(true)
@@ -67,12 +66,12 @@ public class AuthServiceTest {
 
         UserResponseDto userResponseDto = UserResponseDto.builder()
                 .id(UUID.fromString("bef39ea1-3e0a-4189-8864-343f32875f62"))
-                .username("prueba")
+                .name("prueba")
                 .email("prueba@prueba.com")
                 .password("Prueba*123")
                 .roles(new ArrayList<>())
                 .created(LocalDateTime.now())
-                .modificated(LocalDateTime.now())
+                .modified(LocalDateTime.now())
                 .lastLogin(LocalDateTime.now())
                 .token(token)
                 .isactive(true).build();
@@ -83,7 +82,7 @@ public class AuthServiceTest {
 
         Mockito.when(authenticationManager.authenticate(authToken)).thenReturn(auth);
         Mockito.when(jwtUtils.generateJwtToken(auth)).thenReturn(token);
-        Mockito.when(userService.findByEmailOrUsername("prueba@prueba.com", "prueba@prueba.com"))
+        Mockito.when(userService.findByEmail("prueba@prueba.com"))
                 .thenReturn(user);
         Mockito.when(userService.save(user)).thenReturn(user);
         Mockito.when(userMapper.convert(user)).thenReturn(userResponseDto);
@@ -95,35 +94,29 @@ public class AuthServiceTest {
         SignInDto signInDto = new SignInDto("prueba@prueba.com", "Prueba*123");
         UserResponseDto userResponse = authService.signInUser(signInDto);
 
-        assertEquals(userResponse.getUsername(), user.getUsername());
+        assertEquals(userResponse.getName(), user.getName());
         assertEquals(userResponse.getToken(), token);
     }
 
     @Test
     public void signUpUserTest() {
-        SignUpDto signUpDto = SignUpDto.builder()
+        UserCreateDto userCreateDto = UserCreateDto.builder()
                 .email("prueba@prueba.com")
-                .username("prueba")
-                .password("Prueba123*")
-                .build();
-
-        UserRequestDto userRequestDto = UserRequestDto.builder()
-                .email("prueba@prueba.com")
-                .username("prueba")
+                .name("prueba")
                 .password("Prueba123*")
                 .build();
 
         UserResponseDto userResponseDto = UserResponseDto.builder()
                 .email("prueba@prueba.com")
-                .username("prueba")
+                .name("prueba")
                 .password("Prueba123*")
                 .build();
 
-        Mockito.when(signUpMapper.convertToUserRequest(signUpDto)).thenReturn(userRequestDto);
-        Mockito.when(userService.save(userRequestDto)).thenReturn(userResponseDto);
+        Mockito.when(userCreateMapper.convert(userCreateDto)).thenReturn(user);
+        Mockito.when(userService.save(user)).thenReturn(user);
 
-        UserResponseDto value = authService.signUpUser(signUpDto);
-        assertEquals(value.getUsername(), userResponseDto.getUsername());
+        UserResponseDto value = authService.signUpUser(userCreateDto);
+        assertEquals(value.getName(), userResponseDto.getName());
 
     }
 }

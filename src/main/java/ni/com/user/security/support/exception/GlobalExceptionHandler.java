@@ -1,6 +1,5 @@
 package ni.com.user.security.support.exception;
 
-import io.jsonwebtoken.JwtException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import ni.com.user.security.dto.ApiResponseDto;
@@ -42,9 +41,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(value = {ValueAlreadyExistsException.class
-            , IllegalArgumentException.class
-            , AuthenticationException.class
-            , JwtException.class})
+            , IllegalArgumentException.class})
     public ResponseEntity<ApiResponseDto<?>> userAlreadyExistsExceptionHandler(Exception exception) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -56,10 +53,22 @@ public class GlobalExceptionHandler {
                 );
     }
 
-    @ExceptionHandler(value = {RoleNotFoundException.class, EntityNotFoundException.class})
-    public ResponseEntity<ApiResponseDto<?>> roleNotFoundExceptionHandler(Exception exception) {
+    @ExceptionHandler(value = {EntityNotFoundException.class})
+    public ResponseEntity<ApiResponseDto<?>> EntityNotFoundException(Exception exception) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
+                .body(
+                        ApiResponseDto.builder()
+                                .isSuccess(false)
+                                .message(exception.getMessage())
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(value = {UnauthorizedException.class, AuthenticationException.class})
+    public ResponseEntity<ApiResponseDto<?>> AuthenticationException(Exception exception) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
                 .body(
                         ApiResponseDto.builder()
                                 .isSuccess(false)

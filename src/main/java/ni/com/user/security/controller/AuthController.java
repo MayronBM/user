@@ -8,7 +8,6 @@ import ni.com.user.security.dto.*;
 import ni.com.user.security.service.AuthService;
 import ni.com.user.security.service.UserService;
 import ni.com.user.security.support.annotation.password.Sequence;
-import ni.com.user.security.support.exception.RoleNotFoundException;
 import ni.com.user.security.support.exception.ValueAlreadyExistsException;
 import ni.com.user.security.support.message.MessageResource;
 import org.springframework.http.HttpStatus;
@@ -29,8 +28,8 @@ public class AuthController {
 
     @Operation(summary = "Registra un nuevo usuario e inicia sesión.")
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponseDto<?>> registerUser(@RequestBody @Validated(Sequence.class) SignUpDto userDto)
-            throws ValueAlreadyExistsException, RoleNotFoundException {
+    public ResponseEntity<ApiResponseDto<?>> registerUser(@RequestBody @Validated(Sequence.class) UserCreateDto userDto)
+            throws ValueAlreadyExistsException {
         UserResponseDto user = authService.signUpUser(userDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponseDto.builder()

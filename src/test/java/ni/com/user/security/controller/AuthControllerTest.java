@@ -38,12 +38,12 @@ public class AuthControllerTest {
     private UserService userService;
     @MockBean
     private MessageResource messageResource;
-    private SignUpDto signUpDto;
+    private UserCreateDto userCreateDto;
     private UserResponseDto userResponseDto;
     private SignInDto sign;
     @Autowired
     private ObjectMapper objectMapper;
-    private UserRequestDto userRequestDto;
+    private UserUpdateDto userUpdateDto;
 
     @BeforeEach
     public void init() {
@@ -54,37 +54,36 @@ public class AuthControllerTest {
                 .number("12345678")
                 .build();
 
-        signUpDto = SignUpDto.builder()
+        userCreateDto = UserCreateDto.builder()
                 .email("prueba@prueba.com")
-                .username("prueba")
+                .name("prueba prueba")
                 .password("Prueba123*")
                 .phones(Collections.singletonList(phoneDto))
                 .build();
 
-        userRequestDto = UserRequestDto.builder()
-                .email("prueba@prueba.com")
-                .username("prueba")
+        userUpdateDto = UserUpdateDto.builder()
+                .name("prueba prueba")
                 .password("Prueba123*")
                 .phones(Collections.singletonList(phoneDto))
                 .build();
 
         userResponseDto = UserResponseDto.builder()
                 .email("prueba@prueba.com")
-                .username("prueba")
+                .name("prueba")
                 .password("Prueba123*")
                 .phones(Collections.singletonList(phoneDto))
                 .build();
 
         sign = SignInDto.builder()
-                .email(signUpDto.getEmail())
-                .password(signUpDto.getPassword())
+                .email(userCreateDto.getEmail())
+                .password(userCreateDto.getPassword())
                 .build();
     }
 
     @Test
     public void emailNull() throws Exception {
-        signUpDto = SignUpDto.builder()
-                .username("prueba")
+        userCreateDto = UserCreateDto.builder()
+                .name("prueba")
                 .password("12345678")
                 .build();
 
@@ -96,7 +95,7 @@ public class AuthControllerTest {
         ResultActions resultActions = mockMvc.perform(post("/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(csrf())
-                .content(objectMapper.writeValueAsString(signUpDto)));
+                .content(objectMapper.writeValueAsString(userCreateDto)));
 
         resultActions.andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", is(message)));
@@ -104,7 +103,7 @@ public class AuthControllerTest {
 
     @Test
     public void usernameNull() throws Exception {
-        signUpDto = SignUpDto.builder()
+        userCreateDto = UserCreateDto.builder()
                 .email("prueba@prueba.com")
                 .password("12345678")
                 .build();
@@ -117,7 +116,7 @@ public class AuthControllerTest {
         ResultActions resultActions = mockMvc.perform(post("/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(csrf())
-                .content(objectMapper.writeValueAsString(signUpDto)));
+                .content(objectMapper.writeValueAsString(userCreateDto)));
 
         resultActions.andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", is(message)));
@@ -125,9 +124,9 @@ public class AuthControllerTest {
 
     @Test
     public void passwordNull() throws Exception {
-        signUpDto = SignUpDto.builder()
+        userCreateDto = UserCreateDto.builder()
                 .email("prueba@prueba.com")
-                .username("prueba")
+                .name("prueba")
                 .build();
 
         String message = "Datos no válidos.";
@@ -138,7 +137,7 @@ public class AuthControllerTest {
         ResultActions resultActions = mockMvc.perform(post("/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(csrf())
-                .content(objectMapper.writeValueAsString(signUpDto)));
+                .content(objectMapper.writeValueAsString(userCreateDto)));
 
         resultActions.andDo(print())
                 .andExpect(status().isBadRequest())
@@ -147,9 +146,9 @@ public class AuthControllerTest {
 
     @Test
     public void insecurePassword() throws Exception {
-        signUpDto = SignUpDto.builder()
+        userCreateDto = UserCreateDto.builder()
                 .email("prueba@prueba.com")
-                .username("prueba")
+                .name("prueba prueba")
                 .password("12347s")
                 .build();
 
@@ -162,7 +161,7 @@ public class AuthControllerTest {
         ResultActions resultActions = mockMvc.perform(post("/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(csrf())
-                .content(objectMapper.writeValueAsString(signUpDto)));
+                .content(objectMapper.writeValueAsString(userCreateDto)));
 
         resultActions
                 .andExpect(status().isBadRequest())
@@ -178,14 +177,14 @@ public class AuthControllerTest {
         Mockito.when(messageResource.getMessage("success.created"))
                 .thenReturn(message);
 
-        Mockito.when(userService.save(userRequestDto)).thenReturn(userResponseDto);
+        Mockito.when(userService.save(userCreateDto)).thenReturn(userResponseDto);
 
         Mockito.when(authService.signInUser(sign)).thenReturn(userResponseDto);
 
         ResultActions resultActions = mockMvc.perform(post("/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(csrf())
-                .content(objectMapper.writeValueAsString(signUpDto)));
+                .content(objectMapper.writeValueAsString(userCreateDto)));
 
         resultActions.andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message", is(message)))

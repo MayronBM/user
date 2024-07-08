@@ -9,31 +9,30 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import ni.com.user.security.support.annotation.password.Extended;
 import ni.com.user.security.support.annotation.password.Password;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserRequestDto implements Serializable {
-    private UUID id;
-    @NotBlank(message = "{userName.notBlank}")
-    @Size(min = 3, message = "{userName.minSize}")
-    @Size(max = 20, message = "{userName.maxSize}")
-    private String username;
+@ToString(exclude = {"password"})
+public class UserCreateDto implements Serializable {
+    @NotBlank(message = "{name.notBlank}")
+    @Size(min = 10, message = "{name.minSize}")
+    @Size(max = 100, message = "{name.maxSize}")
+    private String name;
     @Email(message = "{email.format}", regexp = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$")
     @NotBlank(message = "{email.notBlank}")
     private String email;
     @NotBlank(message = "{password.notBlank}")
     @Password(groups = Extended.class)
     private String password;
-    private Boolean isactive;
     @Valid
     private List<PhoneDto> phones;
 }

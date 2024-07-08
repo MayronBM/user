@@ -4,7 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import ni.com.user.security.dto.ApiResponseDto;
-import ni.com.user.security.dto.UserRequestDto;
+import ni.com.user.security.dto.UserCreateDto;
+import ni.com.user.security.dto.UserUpdateDto;
 import ni.com.user.security.dto.UserResponseDto;
 import ni.com.user.security.service.UserService;
 import ni.com.user.security.support.annotation.password.Sequence;
@@ -15,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -40,7 +42,7 @@ public class UserController {
 
     @Operation(summary = "Obtiene usuario por id.")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<?>> findById(@PathVariable String id) {
+    public ResponseEntity<ApiResponseDto<?>> findById(@PathVariable UUID id) {
         return ResponseEntity.status(HttpStatus.OK).body(
                 ApiResponseDto.builder()
                         .isSuccess(true)
@@ -51,30 +53,30 @@ public class UserController {
 
     @Operation(summary = "Guarda un nuevo usuario.")
     @PostMapping("/")
-    public ResponseEntity<ApiResponseDto<?>> save(@RequestBody @Validated(Sequence.class) UserRequestDto userResponseDto) {
+    public ResponseEntity<ApiResponseDto<?>> save(@RequestBody @Validated(Sequence.class) UserCreateDto userCreateDto) {
         return ResponseEntity.status(HttpStatus.OK).body(
                 ApiResponseDto.builder()
                         .isSuccess(true)
-                        .response(userService.save(userResponseDto))
+                        .response(userService.save(userCreateDto))
                         .message(messageResource.getMessage("success.created"))
                         .build());
     }
 
     @Operation(summary = "Modifica un registro de usuario.")
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<?>> update(@RequestBody @Validated(Sequence.class) UserRequestDto userRequestDto
-            , @PathVariable String id) {
+    public ResponseEntity<ApiResponseDto<?>> update(@RequestBody @Validated(Sequence.class) UserUpdateDto userUpdateDto
+            , @PathVariable UUID id) {
         return ResponseEntity.status(HttpStatus.OK).body(
                 ApiResponseDto.builder()
                         .isSuccess(true)
-                        .response(userService.update(userRequestDto, id))
+                        .response(userService.update(userUpdateDto, id))
                         .message(messageResource.getMessage("success.updated"))
                         .build());
     }
 
     @Operation(summary = "Elimina un registro de usuario.")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponseDto<?>> delete(@PathVariable String id) {
+    public ResponseEntity<ApiResponseDto<?>> delete(@PathVariable UUID id) {
         userService.delete(id);
         return ResponseEntity.status(HttpStatus.OK).body(
                 ApiResponseDto.builder()

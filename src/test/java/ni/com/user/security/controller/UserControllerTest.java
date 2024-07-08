@@ -2,7 +2,8 @@ package ni.com.user.security.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ni.com.user.security.dto.PhoneDto;
-import ni.com.user.security.dto.UserRequestDto;
+import ni.com.user.security.dto.UserCreateDto;
+import ni.com.user.security.dto.UserUpdateDto;
 import ni.com.user.security.dto.UserResponseDto;
 import ni.com.user.security.service.UserService;
 import ni.com.user.security.support.message.MessageResource;
@@ -44,7 +45,8 @@ public class UserControllerTest {
     private AuthenticationManager authenticationManager;
     @MockBean
     private JwtUtils jwtUtils;
-    private UserRequestDto userRequestDto;
+    private UserUpdateDto userUpdateDto;
+    private UserCreateDto userCreateDto;
     private UserResponseDto userResponseDto;
     private String token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwcnVlYmFAcHJ1ZWJhMi5jb20iLCJpYXQiOjE3MTU2MjI2MzksImV4cCI6MTcxNTYyMzIzOX0.BAgcgAhT64n1em1QwbOQbP9i6NdUUBWJfbSYuLr9T7I";
     @Autowired
@@ -60,9 +62,15 @@ public class UserControllerTest {
                 .number("12345678")
                 .build();
 
-        userRequestDto = UserRequestDto.builder()
+        userUpdateDto = UserUpdateDto.builder()
+                .name("prueba prueba")
+                .password("Prueba123*")
+                .phones(Collections.singletonList(phoneDto))
+                .build();
+
+        userCreateDto = UserCreateDto.builder()
                 .email("prueba@prueba.com")
-                .username("prueba")
+                .name("prueba prueba")
                 .password("Prueba123*")
                 .phones(Collections.singletonList(phoneDto))
                 .build();
@@ -70,7 +78,7 @@ public class UserControllerTest {
         userResponseDto = UserResponseDto.builder()
                 .id(UUID.fromString("bef39ea1-3e0a-4189-8864-343f32875f62"))
                 .email("prueba@prueba.com")
-                .username("prueba")
+                .name("prueba prueba")
                 .password("Prueba123*")
                 .phones(Collections.singletonList(phoneDto))
                 .build();
@@ -96,7 +104,8 @@ public class UserControllerTest {
     @Test
     public void findByIdTest() throws Exception {
         String message = "Búsqueda usuario por id.";
-        String id = "bef39ea1-3e0a-4189-8864-343f32875f62";
+        String idString = "bef39ea1-3e0a-4189-8864-343f32875f62";
+        UUID id = UUID.fromString(idString);
 
         Mockito.when(messageResource.getMessage("users.byId"))
                 .thenReturn(message);
@@ -110,14 +119,14 @@ public class UserControllerTest {
 
         resultActions.andExpect(status().isOk())
                 .andExpect(jsonPath("$.message", is(message)))
-                .andExpect(jsonPath("$.response.id", is(id)));
+                .andExpect(jsonPath("$.response.id", is(idString)));
     }
 
     @Test
     public void saveFailTest() throws Exception {
         String message = "Datos no válidos.";
         String messagePassword = "Contraseña debe tener al menos 10 caracteres.";
-        userRequestDto.setPassword("1234");
+        userCreateDto.setPassword("1234");
 
         Mockito.when(messageResource.getMessage("error.argumentNotValid"))
                 .thenReturn(message);
@@ -125,7 +134,7 @@ public class UserControllerTest {
         ResultActions resultActions = mockMvc.perform(post("/users/")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userRequestDto))
+                .content(objectMapper.writeValueAsString(userCreateDto))
                 .with(csrf()));
 
         resultActions
@@ -141,12 +150,12 @@ public class UserControllerTest {
         Mockito.when(messageResource.getMessage("success.created"))
                 .thenReturn(message);
 
-        Mockito.when(userService.save(userRequestDto)).thenReturn(userResponseDto);
+        Mockito.when(userService.save(userCreateDto)).thenReturn(userResponseDto);
 
         ResultActions resultActions = mockMvc.perform(post("/users/")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userRequestDto))
+                .content(objectMapper.writeValueAsString(userCreateDto))
                 .with(csrf()));
 
         resultActions.andExpect(status().isOk())
@@ -157,28 +166,30 @@ public class UserControllerTest {
     @Test
     public void updateTest() throws Exception {
         String message = "Registro actualizado exitosamente.";
-        String id = "bef39ea1-3e0a-4189-8864-343f32875f62";
+        String idString = "bef39ea1-3e0a-4189-8864-343f32875f62";
+        UUID id = UUID.fromString(idString);
+        userResponseDto.setId(id);
 
         Mockito.when(messageResource.getMessage("success.updated"))
                 .thenReturn(message);
 
-        Mockito.when(userService.update(userRequestDto, id)).thenReturn(userResponseDto);
+        Mockito.when(userService.update(userUpdateDto, id)).thenReturn(userResponseDto);
 
         ResultActions resultActions = mockMvc.perform(put("/users/{id}", id)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userRequestDto))
+                .content(objectMapper.writeValueAsString(userUpdateDto))
                 .with(csrf()));
 
         resultActions.andExpect(status().isOk())
                 .andExpect(jsonPath("$.message", is(message)))
-                .andExpect(jsonPath("$.response.id", is(id)));
+                .andExpect(jsonPath("$.response.id", is(idString)));
     }
 
     @Test
     public void deleteTest() throws Exception {
         String message = "Registro eliminado exitosamente.";
-        String id = "bef39ea1-3e0a-4189-8864-343f32875f62";
+        UUID id = UUID.fromString("bef39ea1-3e0a-4189-8864-343f32875f62");
 
         Mockito.when(messageResource.getMessage("success.deleted"))
                 .thenReturn(message);

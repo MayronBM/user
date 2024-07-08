@@ -2,11 +2,13 @@ package ni.com.user.security.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import ni.com.user.security.dto.UserRequestDto;
+import ni.com.user.security.dto.UserCreateDto;
+import ni.com.user.security.dto.UserUpdateDto;
 import ni.com.user.security.dto.UserResponseDto;
 import ni.com.user.security.mapper.PhoneMapper;
+import ni.com.user.security.mapper.UserCreateMapper;
 import ni.com.user.security.mapper.UserMapper;
-import ni.com.user.security.mapper.UserRequestMapper;
+import ni.com.user.security.mapper.UserUpdateMapper;
 import ni.com.user.security.model.Phone;
 import ni.com.user.security.model.User;
 import ni.com.user.security.repository.UserRepository;
@@ -27,19 +29,16 @@ public class UserService {
     private final MessageResource messageResource;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final UserRequestMapper userRequestMapper;
+    private final UserUpdateMapper userUpdateMapper;
+    private final UserCreateMapper userCreateMapper;
     private final PhoneMapper phoneMapper;
-
-    public boolean existsByUsername(String username) {
-        return userRepository.existsByUsername(username);
-    }
 
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }
 
-    public User findByEmailOrUsername(String email, String username) {
-        return userRepository.findByEmailOrUsername(email, username)
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         messageResource.getMessage("error.userNotFound") + email));
     }
@@ -48,8 +47,8 @@ public class UserService {
         return userMapper.map(userRepository.findAll());
     }
 
-    public UserResponseDto findById(String id) {
-        return userMapper.convertTo(userRepository.findById(UUID.fromString(id))
+    public UserResponseDto findById(UUID id) {
+        return userMapper.convertTo(userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         messageResource.getMessage("error.EntityNotFoundException"))));
     }
@@ -58,45 +57,37 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public UserResponseDto save(UserRequestDto userDto) throws ValueAlreadyExistsException {
+    public UserResponseDto save(UserCreateDto userDto) throws ValueAlreadyExistsException {
+        final User user = userCreateMapper.convert(userDto);
 
-        User user = userRequestMapper.convert(userDto);
-
-        User finalUser = user;
-        user.getPhones().forEach(phone -> phone.setUser(finalUser));
+        user.getPhones().forEach(phone -> phone.setUser(user));
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setEnabled(true);
         user.setCreated(LocalDateTime.now());
-        user = this.save(user);
 
-        return userMapper.convert(user);
+        return userMapper.convert(this.save(user));
     }
 
-    public UserResponseDto update(UserRequestDto userRequestDto, String id) {
+    public UserResponseDto update(UserUpdateDto userUpdateDto, UUID id) {
 
-        UUID uuid = UUID.fromString(id);
-        User user = userRepository.findById(uuid)
+        final User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         messageResource.getMessage("error.EntityNotFoundException")));
 
-        List<Phone> phones = phoneMapper.map(userRequestDto.getPhones());
-        User finalUser = user;
-        phones.forEach(phone -> phone.setUser(finalUser));
+        List<Phone> phones = phoneMapper.map(userUpdateDto.getPhones());
+        phones.forEach(phone -> phone.setUser(user));
 
-        user.setId(uuid);
-        user.setUsername(userRequestDto.getUsername());
-        user.setEmail(userRequestDto.getEmail());
-        user.setPassword(passwordEncoder.encode(userRequestDto.getPassword()));
-        user.setEnabled(userRequestDto.getIsactive() != null ? userRequestDto.getIsactive() : true);
+        user.setName(userUpdateDto.getName());
+        user.setPassword(passwordEncoder.encode(userUpdateDto.getPassword()));
+        user.setEnabled(userUpdateDto.getIsactive() != null ? userUpdateDto.getIsactive() : true);
         user.setPhones(phones);
-        user.setModificated(LocalDateTime.now());
-        user = this.save(user);
+        user.setModified(LocalDateTime.now());
 
-        return userMapper.convertTo(user);
+        return userMapper.convertTo(this.save(user));
     }
 
-    public void delete(String id) {
-        User user = userRepository.findById(UUID.fromString(id)).orElseThrow(() -> new EntityNotFoundException(
+    public void delete(UUID id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(
                 messageResource.getMessage("error.EntityNotFoundException")));
 
         userRepository.delete(user);
