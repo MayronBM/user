@@ -17,6 +17,10 @@ este aplicativo fueron:
 
 ### Despliegue local
 
+De manera general la aplicación funciona según se muestra en la siguiente imagen:
+
+![diagrama](./img/jwt.jpg)
+
 Una vez haya descargado el repositorio a su máquina local, únicamente deberá
 cargar el proyecto con el ide de su preferencia y ejecutar la aplicación.
 
@@ -25,8 +29,12 @@ Se ha dejado el path '/api/v1' por defecto y usa el puerto convencional 8080.
 Puede acceder a la consola web de H2 mediante la ruta '/api/v1/auth/h2-console/login.jsp'
 cuya configuración la podemos encontrar en el archivo de configuración de spring.
 
+![diagrama](./img/h2.png)
+
 Puede acceder a la información de los endpoints expuestos por esta api mediante swagger
 '/api/v1/swagger-ui/'.
+
+![diagrama](./img/swagger.png)
 
 ### Recursos
 
