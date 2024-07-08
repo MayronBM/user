@@ -2,8 +2,8 @@ package ni.com.user.security.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ni.com.user.security.dto.*;
-import ni.com.user.security.service.AuthService;
-import ni.com.user.security.service.UserService;
+import ni.com.user.security.service.impl.AuthServiceImpl;
+import ni.com.user.security.service.impl.UserServiceImpl;
 import ni.com.user.security.support.message.MessageResource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,9 +33,9 @@ public class AuthControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @MockBean
-    private AuthService authService;
+    private AuthServiceImpl authServiceImpl;
     @MockBean
-    private UserService userService;
+    private UserServiceImpl userServiceImpl;
     @MockBean
     private MessageResource messageResource;
     private UserCreateDto userCreateDto;
@@ -43,7 +43,6 @@ public class AuthControllerTest {
     private SignInDto sign;
     @Autowired
     private ObjectMapper objectMapper;
-    private UserUpdateDto userUpdateDto;
 
     @BeforeEach
     public void init() {
@@ -56,12 +55,6 @@ public class AuthControllerTest {
 
         userCreateDto = UserCreateDto.builder()
                 .email("prueba@prueba.com")
-                .name("prueba prueba")
-                .password("Prueba123*")
-                .phones(Collections.singletonList(phoneDto))
-                .build();
-
-        userUpdateDto = UserUpdateDto.builder()
                 .name("prueba prueba")
                 .password("Prueba123*")
                 .phones(Collections.singletonList(phoneDto))
@@ -177,9 +170,9 @@ public class AuthControllerTest {
         Mockito.when(messageResource.getMessage("success.created"))
                 .thenReturn(message);
 
-        Mockito.when(userService.save(userCreateDto)).thenReturn(userResponseDto);
+        Mockito.when(userServiceImpl.saveDto(userCreateDto)).thenReturn(userResponseDto);
 
-        Mockito.when(authService.signInUser(sign)).thenReturn(userResponseDto);
+        Mockito.when(authServiceImpl.signInUser(sign)).thenReturn(userResponseDto);
 
         ResultActions resultActions = mockMvc.perform(post("/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -198,7 +191,7 @@ public class AuthControllerTest {
         Mockito.when(messageResource.getMessage("success.signin"))
                 .thenReturn(message);
 
-        Mockito.when(authService.signInUser(sign)).thenReturn(userResponseDto);
+        Mockito.when(authServiceImpl.signInUser(sign)).thenReturn(userResponseDto);
 
         ResultActions resultActions = mockMvc.perform(post("/auth/signin")
                 .contentType(MediaType.APPLICATION_JSON)

@@ -6,6 +6,8 @@ import ni.com.user.security.dto.UserResponseDto;
 import ni.com.user.security.mapper.UserCreateMapper;
 import ni.com.user.security.mapper.UserMapper;
 import ni.com.user.security.model.User;
+import ni.com.user.security.service.impl.AuthServiceImpl;
+import ni.com.user.security.service.impl.UserServiceImpl;
 import ni.com.user.security.support.security.UserDetailsImpl;
 import ni.com.user.security.support.security.jwt.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,22 +27,20 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class AuthServiceTest {
+public class AuthServiceImplTest {
 
     @Mock
-    private UserService userService;
+    private UserServiceImpl userServiceImpl;
     @Mock
     private AuthenticationManager authenticationManager;
     @Mock
     private JwtUtils jwtUtils;
     @Mock
     private UserMapper userMapper;
-
     @Mock
     private UserCreateMapper userCreateMapper;
-
     @InjectMocks
-    private AuthService authService;
+    private AuthServiceImpl authServiceImpl;
     private User user;
     private String token;
 
@@ -82,9 +82,9 @@ public class AuthServiceTest {
 
         Mockito.when(authenticationManager.authenticate(authToken)).thenReturn(auth);
         Mockito.when(jwtUtils.generateJwtToken(auth)).thenReturn(token);
-        Mockito.when(userService.findByEmail("prueba@prueba.com"))
+        Mockito.when(userServiceImpl.findByEmail("prueba@prueba.com"))
                 .thenReturn(user);
-        Mockito.when(userService.save(user)).thenReturn(user);
+        Mockito.when(userServiceImpl.save(user)).thenReturn(user);
         Mockito.when(userMapper.convert(user)).thenReturn(userResponseDto);
     }
 
@@ -92,7 +92,7 @@ public class AuthServiceTest {
     public void signInUserTest() {
 
         SignInDto signInDto = new SignInDto("prueba@prueba.com", "Prueba*123");
-        UserResponseDto userResponse = authService.signInUser(signInDto);
+        UserResponseDto userResponse = authServiceImpl.signInUser(signInDto);
 
         assertEquals(userResponse.getName(), user.getName());
         assertEquals(userResponse.getToken(), token);
@@ -113,9 +113,9 @@ public class AuthServiceTest {
                 .build();
 
         Mockito.when(userCreateMapper.convert(userCreateDto)).thenReturn(user);
-        Mockito.when(userService.save(user)).thenReturn(user);
+        Mockito.when(userServiceImpl.save(user)).thenReturn(user);
 
-        UserResponseDto value = authService.signUpUser(userCreateDto);
+        UserResponseDto value = authServiceImpl.signUpUser(userCreateDto);
         assertEquals(value.getName(), userResponseDto.getName());
 
     }

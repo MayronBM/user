@@ -2,14 +2,15 @@ package ni.com.user.security.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import ni.com.user.security.dto.UserCreateDto;
-import ni.com.user.security.dto.UserUpdateDto;
 import ni.com.user.security.dto.UserResponseDto;
+import ni.com.user.security.dto.UserUpdateDto;
 import ni.com.user.security.mapper.PhoneMapper;
 import ni.com.user.security.mapper.UserCreateMapper;
 import ni.com.user.security.mapper.UserMapper;
 import ni.com.user.security.mapper.UserUpdateMapper;
 import ni.com.user.security.model.User;
 import ni.com.user.security.repository.UserRepository;
+import ni.com.user.security.service.impl.UserServiceImpl;
 import ni.com.user.security.support.message.MessageResource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,10 +28,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
-public class UserServiceTest {
+public class UserServiceImplTest {
     @Mock
     private UserRepository userRepository;
     @Mock
@@ -38,15 +42,15 @@ public class UserServiceTest {
     @Mock
     private UserMapper userMapper;
     @Mock
+    private PhoneMapper phoneMapper;
+    @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
     private UserUpdateMapper userUpdateMapper;
     @Mock
     private UserCreateMapper userCreateMapper;
-    @Mock
-    private PhoneMapper phoneMapper;
     @InjectMocks
-    private UserService userService;
+    private UserServiceImpl userServiceImpl;
     private User user;
     private UserResponseDto userResponseDto;
     private UserUpdateDto userUpdateDto;
@@ -97,22 +101,12 @@ public class UserServiceTest {
     }
 
     @Test
-    public void existsByEmailTrueTest() {
-        String email = "prueba@prueba.com";
-
-        Mockito.when(userRepository.existsByEmail(email)).thenReturn(true);
-        Boolean exists = userService.existsByEmail(email);
-
-        assertEquals(exists, true);
-    }
-
-    @Test
     public void findByEmailTest() {
         String email = "prueba@prueba.com";
 
         Mockito.when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
-        User value = userService.findByEmail(email);
+        User value = userServiceImpl.findByEmail(email);
 
         assertNotNull(value);
         assertEquals(value.getName(), user.getName());
@@ -127,7 +121,7 @@ public class UserServiceTest {
         Mockito.when(messageResource.getMessage("error.userNotFound")).thenReturn("Registro no encontrado con nombre de usuario: ");
 
         UsernameNotFoundException thrown = Assertions.assertThrows(UsernameNotFoundException.class, () -> {
-            userService.findByEmail(email);
+            userServiceImpl.findByEmail(email);
         }, "UsernameNotFoundException was expected");
 
         Assertions.assertEquals("Registro no encontrado con nombre de usuario: prueba", thrown.getMessage());
@@ -142,7 +136,7 @@ public class UserServiceTest {
         Mockito.when(userRepository.findAll()).thenReturn(userList);
         Mockito.when(userMapper.map(userList)).thenReturn(userResponseDtoList);
 
-        List<UserResponseDto> list = userService.findAll();
+        List<UserResponseDto> list = userServiceImpl.findAll();
 
         assertNotNull(list);
         assertFalse(list.isEmpty());
@@ -153,7 +147,7 @@ public class UserServiceTest {
         Mockito.when(userRepository.findById(id)).thenReturn(Optional.of(user));
         Mockito.when(userMapper.convertTo(user)).thenReturn(userResponseDto);
 
-        UserResponseDto userDto = userService.findById(id);
+        UserResponseDto userDto = userServiceImpl.findById(id);
 
         assertEquals(userDto.getEmail(), userResponseDto.getEmail());
     }
@@ -165,7 +159,7 @@ public class UserServiceTest {
                 .thenReturn("No se encontró coincidencias.");
 
         EntityNotFoundException thrown = Assertions.assertThrows(EntityNotFoundException.class, () -> {
-            userService.findById(id);
+            userServiceImpl.findById(id);
         }, "EntityNotFoundException was expected");
 
         Assertions.assertEquals("No se encontró coincidencias.", thrown.getMessage());
@@ -175,20 +169,19 @@ public class UserServiceTest {
     public void saveTest() {
         Mockito.when(userRepository.save(user)).thenReturn(user);
 
-        User userResponse = userService.save(user);
+        User userResponse = userServiceImpl.save(user);
 
         assertEquals(user.getEmail(), userResponse.getEmail());
     }
 
     @Test
     public void saveDto() {
-//        Mockito.when(userService.existsByEmail(user.getEmail())).thenReturn(false);
         Mockito.when(userCreateMapper.convert(userCreateDto)).thenReturn(user);
         Mockito.when(passwordEncoder.encode(userUpdateDto.getPassword())).thenReturn(userUpdateDto.getPassword());
         Mockito.when(userMapper.convert(user)).thenReturn(userResponseDto);
-        Mockito.when(userService.save(user)).thenReturn(user);
+        Mockito.when(userServiceImpl.save(user)).thenReturn(user);
 
-        UserResponseDto responseDto = userService.save(userCreateDto);
+        UserResponseDto responseDto = userServiceImpl.saveDto(userCreateDto);
 
         assertNotNull(responseDto);
         assertEquals(id, responseDto.getId());
@@ -197,12 +190,11 @@ public class UserServiceTest {
 
     @Test
     public void updateDtoEntityNotFoundTest() {
-        Mockito.when(userService.existsByEmail(user.getEmail())).thenReturn(false);
         Mockito.when(messageResource.getMessage("error.EntityNotFoundException"))
                 .thenReturn("No se encontró coincidencias.");
 
         EntityNotFoundException thrownUser = Assertions.assertThrows(EntityNotFoundException.class, () -> {
-            userService.update(userUpdateDto, id);
+            userServiceImpl.updateDto(userUpdateDto, id);
         }, "EntityNotFoundException was expected");
 
         assertEquals("No se encontró coincidencias.", thrownUser.getMessage());
@@ -210,14 +202,14 @@ public class UserServiceTest {
 
     @Test
     public void updateDtoTest() {
-        Mockito.when(userService.existsByEmail(user.getEmail())).thenReturn(false);
         Mockito.when(userUpdateMapper.convert(userUpdateDto)).thenReturn(user);
         Mockito.when(passwordEncoder.encode(userUpdateDto.getPassword())).thenReturn(userUpdateDto.getPassword());
         Mockito.when(userMapper.convertTo(user)).thenReturn(userResponseDto);
-        Mockito.when(userService.save(user)).thenReturn(user);
+        Mockito.when(phoneMapper.map(userUpdateDto.getPhones())).thenReturn(new ArrayList<>());
+        Mockito.when(userServiceImpl.save(user)).thenReturn(user);
         Mockito.when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
-        UserResponseDto responseDto = userService.update(userUpdateDto, id);
+        UserResponseDto responseDto = userServiceImpl.updateDto(userUpdateDto, id);
 
         assertNotNull(responseDto);
         assertEquals(id, responseDto.getId());
@@ -231,7 +223,7 @@ public class UserServiceTest {
                 .thenReturn("No se encontró coincidencias.");
 
         EntityNotFoundException thrownUser = Assertions.assertThrows(EntityNotFoundException.class, () -> {
-            userService.delete(id);
+            userServiceImpl.delete(id);
         }, "EntityNotFoundException was expected");
 
         assertEquals("No se encontró coincidencias.", thrownUser.getMessage());
@@ -241,9 +233,9 @@ public class UserServiceTest {
     public void deleteTest() {
         Mockito.when(userRepository.findById(id)).thenReturn(Optional.of(user));
         Mockito.doNothing().when(userRepository).delete(user);
-        userService.delete(id);
+        userServiceImpl.delete(id);
 
-        assertAll(() -> userService.delete(id));
+        assertAll(() -> userServiceImpl.delete(id));
 
     }
 }

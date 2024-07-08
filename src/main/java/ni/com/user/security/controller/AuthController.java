@@ -4,16 +4,22 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import ni.com.user.security.dto.*;
+import ni.com.user.security.dto.ApiResponseDto;
+import ni.com.user.security.dto.SignInDto;
+import ni.com.user.security.dto.UserCreateDto;
+import ni.com.user.security.dto.UserResponseDto;
 import ni.com.user.security.service.AuthService;
-import ni.com.user.security.service.UserService;
 import ni.com.user.security.support.annotation.password.Sequence;
 import ni.com.user.security.support.exception.ValueAlreadyExistsException;
 import ni.com.user.security.support.message.MessageResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @CrossOrigin("*")
@@ -23,7 +29,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-    private final UserService userService;
     private final MessageResource messageResource;
 
     @Operation(summary = "Registra un nuevo usuario e inicia sesión.")

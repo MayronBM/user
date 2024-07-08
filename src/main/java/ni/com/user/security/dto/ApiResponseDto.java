@@ -2,7 +2,8 @@ package ni.com.user.security.dto;
 
 import lombok.*;
 
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 public class ApiResponseDto<T> {

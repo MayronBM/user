@@ -3,11 +3,10 @@ package ni.com.user.security.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ni.com.user.security.dto.PhoneDto;
 import ni.com.user.security.dto.UserCreateDto;
-import ni.com.user.security.dto.UserUpdateDto;
 import ni.com.user.security.dto.UserResponseDto;
-import ni.com.user.security.service.UserService;
+import ni.com.user.security.dto.UserUpdateDto;
+import ni.com.user.security.service.impl.UserServiceImpl;
 import ni.com.user.security.support.message.MessageResource;
-import ni.com.user.security.support.security.jwt.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -17,7 +16,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -26,8 +24,12 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,15 +42,11 @@ public class UserControllerTest {
     @MockBean
     private MessageResource messageResource;
     @MockBean
-    private UserService userService;
-    @MockBean
-    private AuthenticationManager authenticationManager;
-    @MockBean
-    private JwtUtils jwtUtils;
+    private UserServiceImpl userServiceImpl;
     private UserUpdateDto userUpdateDto;
     private UserCreateDto userCreateDto;
     private UserResponseDto userResponseDto;
-    private String token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwcnVlYmFAcHJ1ZWJhMi5jb20iLCJpYXQiOjE3MTU2MjI2MzksImV4cCI6MTcxNTYyMzIzOX0.BAgcgAhT64n1em1QwbOQbP9i6NdUUBWJfbSYuLr9T7I";
+    private final String token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwcnVlYmFAcHJ1ZWJhMi5jb20iLCJpYXQiOjE3MTU2MjI2MzksImV4cCI6MTcxNTYyMzIzOX0.BAgcgAhT64n1em1QwbOQbP9i6NdUUBWJfbSYuLr9T7I";
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -90,7 +88,7 @@ public class UserControllerTest {
 
         Mockito.when(messageResource.getMessage("users.list"))
                 .thenReturn(message);
-        Mockito.when(userService.findAll()).thenReturn(Collections.singletonList(userResponseDto));
+        Mockito.when(userServiceImpl.findAll()).thenReturn(Collections.singletonList(userResponseDto));
 
         ResultActions resultActions = mockMvc.perform(get("/users/")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -110,7 +108,7 @@ public class UserControllerTest {
         Mockito.when(messageResource.getMessage("users.byId"))
                 .thenReturn(message);
 
-        Mockito.when(userService.findById(id)).thenReturn(userResponseDto);
+        Mockito.when(userServiceImpl.findById(id)).thenReturn(userResponseDto);
 
         ResultActions resultActions = mockMvc.perform(get("/users/{id}", id)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -150,7 +148,8 @@ public class UserControllerTest {
         Mockito.when(messageResource.getMessage("success.created"))
                 .thenReturn(message);
 
-        Mockito.when(userService.save(userCreateDto)).thenReturn(userResponseDto);
+
+        Mockito.when(userServiceImpl.saveDto(any(UserCreateDto.class))).thenReturn(userResponseDto);
 
         ResultActions resultActions = mockMvc.perform(post("/users/")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -173,7 +172,7 @@ public class UserControllerTest {
         Mockito.when(messageResource.getMessage("success.updated"))
                 .thenReturn(message);
 
-        Mockito.when(userService.update(userUpdateDto, id)).thenReturn(userResponseDto);
+        Mockito.when(userServiceImpl.updateDto(any(UserUpdateDto.class), any(UUID.class))).thenReturn(userResponseDto);
 
         ResultActions resultActions = mockMvc.perform(put("/users/{id}", id)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -194,7 +193,7 @@ public class UserControllerTest {
         Mockito.when(messageResource.getMessage("success.deleted"))
                 .thenReturn(message);
 
-        Mockito.doNothing().when(userService).delete(id);
+        Mockito.doNothing().when(userServiceImpl).delete(id);
 
         ResultActions resultActions = mockMvc.perform(delete("/users/{id}", id)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)

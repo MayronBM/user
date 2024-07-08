@@ -5,15 +5,23 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import ni.com.user.security.dto.ApiResponseDto;
 import ni.com.user.security.dto.UserCreateDto;
-import ni.com.user.security.dto.UserUpdateDto;
 import ni.com.user.security.dto.UserResponseDto;
+import ni.com.user.security.dto.UserUpdateDto;
 import ni.com.user.security.service.UserService;
 import ni.com.user.security.support.annotation.password.Sequence;
 import ni.com.user.security.support.message.MessageResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
@@ -57,7 +65,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(
                 ApiResponseDto.builder()
                         .isSuccess(true)
-                        .response(userService.save(userCreateDto))
+                        .response(userService.saveDto(userCreateDto))
                         .message(messageResource.getMessage("success.created"))
                         .build());
     }
@@ -69,7 +77,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(
                 ApiResponseDto.builder()
                         .isSuccess(true)
-                        .response(userService.update(userUpdateDto, id))
+                        .response(userService.updateDto(userUpdateDto, id))
                         .message(messageResource.getMessage("success.updated"))
                         .build());
     }
