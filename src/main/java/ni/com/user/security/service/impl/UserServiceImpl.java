@@ -12,7 +12,6 @@ import ni.com.user.security.model.Phone;
 import ni.com.user.security.model.User;
 import ni.com.user.security.repository.UserRepository;
 import ni.com.user.security.service.UserService;
-import ni.com.user.security.support.exception.ValueAlreadyExistsException;
 import ni.com.user.security.support.message.MessageResource;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,27 +31,61 @@ public class UserServiceImpl implements UserService {
     private final UserCreateMapper userCreateMapper;
     private final PhoneMapper phoneMapper;
 
+    /**
+     * Método que permite obtener un usuario por medio del email.
+     *
+     * @param email parámetro de búsqueda.
+     * @return usuario encontrado.
+     */
+    @Override
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         messageResource.getMessage("error.userNotFound") + email));
     }
 
+    /**
+     * Método que permite obtener todos los usuarios.
+     *
+     * @return Lista de usuarioResponseDto;
+     */
+    @Override
     public List<UserResponseDto> findAll() {
         return userMapper.map(userRepository.findAll());
     }
 
+    /**
+     * Método que permite obtener un usuario por medio de su id.
+     *
+     * @param id parámetro de búsqueda.
+     * @return usuario encontrado.
+     */
+    @Override
     public UserResponseDto findById(UUID id) {
         return userMapper.convertTo(userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         messageResource.getMessage("error.EntityNotFoundException"))));
     }
 
+    /**
+     * Método que permite guardar una entidad User.
+     *
+     * @param user Usuario a guardar.
+     * @return usuario guardado.
+     */
+    @Override
     public User save(User user) {
         return userRepository.save(user);
     }
 
-    public UserResponseDto saveDto(UserCreateDto userDto) throws ValueAlreadyExistsException {
+    /**
+     * Método que permite guardar un nuevo usuario, agregando algunas propiedades necesarias en el proceso.
+     *
+     * @param userDto Parámetro a guardar.
+     * @return usuario guardado.
+     */
+    @Override
+    public UserResponseDto saveDto(UserCreateDto userDto) {
         final User user = userCreateMapper.convert(userDto);
 
         user.getPhones().forEach(phone -> phone.setUser(user));
@@ -63,6 +96,14 @@ public class UserServiceImpl implements UserService {
         return userMapper.convert(this.save(user));
     }
 
+    /**
+     * Método que permite actualizar los datos de un usuario.
+     *
+     * @param userUpdateDto datos del usuario a modificar.
+     * @param id            id del usuario.
+     * @return Usuario actualizado.
+     */
+    @Override
     public UserResponseDto updateDto(UserUpdateDto userUpdateDto, UUID id) {
 
         final User user = userRepository.findById(id)
@@ -81,6 +122,12 @@ public class UserServiceImpl implements UserService {
         return userMapper.convertTo(this.save(user));
     }
 
+    /**
+     * Método que permite eliminar un usuario.
+     *
+     * @param id id del usuario a eliminar.
+     */
+    @Override
     public void delete(UUID id) {
         User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(
                 messageResource.getMessage("error.EntityNotFoundException")));

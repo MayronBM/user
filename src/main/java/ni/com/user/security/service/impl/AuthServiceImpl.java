@@ -26,11 +26,25 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtils jwtUtils;
     private final UserMapper userMapper;
 
+    /**
+     * Método que guarda un nuevo usuario e inicia acceso.
+     *
+     * @param userCreateDto Parámetro con la información a guardar.
+     * @return objeto UserResponseDto.
+     */
+    @Override
     public UserResponseDto signUpUser(UserCreateDto userCreateDto) {
         userService.saveDto(userCreateDto);
         return signInUser(new SignInDto(userCreateDto.getEmail(), userCreateDto.getPassword()));
     }
 
+    /**
+     * Método que permite acceso a un usuario, generando un token para hacer uso de los otros servicios.
+     *
+     * @param signInRequestDto Parámetro que contiene usuario y clave;
+     * @return objeto UserResponseDto.
+     */
+    @Override
     public UserResponseDto signInUser(SignInDto signInRequestDto) {
 
         Authentication authentication = authenticationManager.authenticate(

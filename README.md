@@ -40,7 +40,7 @@ Puede acceder a la información de los endpoints expuestos por esta api mediante
 
 ### <i class="ti ti-brand-pushover"></i> Colección Postman
 
-Url de colección de Postman:
+Url de colección de Postman (también puede importar a partir del archivo security_import_postman.json):
 
 > <i class="ti ti-external-link"></i> [https://documenter.getpostman.com/view/4583478/2sA3XMjPVz
 ](https://documenter.getpostman.com/view/4583478/2sA3XMjPVz
